@@ -106,13 +106,6 @@
                             <div class="card card-custom p-4 text-center">
                                 <p class="text-muted font-monospace mb-0 small">No active test frameworks are scheduled for your tier profile metrics at this time.</p>
                             </div>
-                            <% if (exam.attempt_count >= (exam.allowed_attempts || 1)) { %>
-    <button class="btn btn-secondary w-100" disabled>🔒 Max Attempts Reached</button>
-<% } else { %>
-    <a href="/student/exams/<%= exam.id %>" class="btn btn-danger w-100">
-        📝 Enter Exam (<%= exam.attempt_count %>/<%= exam.allowed_attempts %>)
-    </a>
-<% } %>
                         </div>
                     <% } else { %>
                         <% exams.forEach(function(exam) { %>
