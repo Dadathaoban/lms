@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .result-card { max-width: 750px; margin: 50px auto; border-radius: 4px; border: 1px solid #eaeaea; }
+        .correct-row { background-color: #d4edda !important; color: #155724; }
+        .wrong-row { background-color: #f8d7da !important; color: #721c24; }
+        .no-answer-row { background-color: #fff3cd !important; color: #856404; }
+        .score-big { font-size: 5rem; font-weight: 800; font-family: monospace; letter-spacing: -0.03em; line-height: 1; }
+        .score-pass { color: #198754; }
+        .score-fail { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container py-3">
+        <div class="card result-card shadow-sm bg-white">
+            <div class="card-header bg-dark text-white text-center py-3">
+                <h4 class="mb-0 text-uppercase tracking-wider font-monospace" style="font-size: 1.1rem;">📊 Examination Processing Engine</h4>
+            </div>
+            <div class="card-body p-5 text-center">
+                <h3 class="fw-bold text-dark mb-1 text-uppercase"><%= examTitle %></h3>
+                <p class="small text-muted text-uppercase mb-4">CBT Terminal Assessment Script Result Record</p>
+                
+                <div class="my-4">
+                    <div class="score-big mb-2 <%= scorePercentage >= 50 ? 'score-pass' : 'score-fail' %>">
+                        <%= scorePercentage %>%
+                    </div>
+                </div>
+                
+                <p class="lead fs-5 text-secondary">
+                    Performance Node: <strong class="text-dark"><%= correctCount %></strong> out of <strong class="text-dark"><%= totalQuestions %></strong> Evaluated Selections
+                </p>
+                
+                <div class="mx-auto w-75 my-4">
+                    <% if (scorePercentage >= 70) { %>
+                        <div class="alert alert-success border rounded-1 py-2 fw-semibold">🎉 Excellent! You passed this module workspace with distinction!</div>
+                    <% } else if (scorePercentage >= 50) { %>
+                        <div class="alert alert-info border rounded-1 py-2 fw-semibold">👍 Good job! You have achieved passing grade requirements.</div>
+                    <% } else { %>
+                        <div class="alert alert-danger border rounded-1 py-2 fw-semibold">📚 Performance benchmark not met. Review curriculum materials and try again.</div>
+                    <% } %>
+                </div>
+                
+                <% if (typeof detailedResults !== 'undefined' && detailedResults.length > 0) { %>
+                <div class="text-start mt-5 pt-3 border-top">
+                    <h5 class="fw-bold text-dark mb-3 text-uppercase font-monospace" style="font-size: 0.95rem;">📋 Comprehensive Script Breakdown Matrix:</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center small">
+                            <thead class="table-dark text-uppercase font-monospace" style="font-size: 0.8rem;">
+                                <tr>
+                                    <th style="width: 10%;">Item</th>
+                                    <th style="width: 35%;">Your Input Selection</th>
+                                    <th style="width: 35%;">System Valid Answer</th>
+                                    <th style="width: 20%;">Result Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% detailedResults.forEach(function(r) { %>
+                                    <% 
+                                        let rowClass = 'wrong-row';
+                                        if (r.isCorrect) {
+                                            rowClass = 'correct-row';
+                                        } else if (r.studentAnswer === '(no answer)' || r.studentAnswer === '') {
+                                            rowClass = 'no-answer-row';
+                                        }
+                                    %>
+                                    <tr class="<%= rowClass %>">
+                                        <td class="fw-bold font-monospace">#<%= r.questionNumber %></td>
+                                        <td><span class="badge bg-white text-dark border px-3 py-1.5 fs-6"><%= r.studentAnswer %></span></td>
+                                        <td><span class="badge bg-white text-dark border px-3 py-1.5 fs-6"><%= r.correctAnswer %></span></td>
+                                        <td class="fw-bold fs-5">
+                                            <%= r.isCorrect ? '✅' : '❌' %>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <% } %>
+                
+                <div class="mt-4 pt-2">
+                    <a href="/student/dashboard" class="btn btn-dark px-5 py-2 text-uppercase fw-bold font-monospace tracking-wide rounded-1 shadow-sm" style="font-size: 0.9rem;">
+                        Return to Workspace Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

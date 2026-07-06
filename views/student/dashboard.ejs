@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Workspace Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #fcfcfc; color: #111111; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { background-color: #ffffff; min-height: 100vh; border-right: 1px solid #eaeaea; }
+        .sidebar .nav-link { color: #444444; font-weight: 500; border-radius: 2px; margin-bottom: 4px; padding: 10px 15px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #000000; color: #ffffff; }
+        .card-custom { border: 1px solid #eaeaea; border-radius: 2px; background-color: #ffffff; transition: transform 0.2s; }
+        .card-custom:hover { transform: translateY(-2px); border-color: #111111; }
+        .border-black-thick { border-top: 3px solid #000000; }
+        .badge-track { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 12px; border-radius: 1px; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+            <div class="position-sticky">
+                <div class="px-2 py-3 mb-3 border-bottom">
+                    <h6 class="fw-bold text-uppercase m-0 tracking-wide">STUDENT PORTAL</h6>
+                    <small class="text-muted font-monospace" style="font-size: 0.7rem;">LEVEL: <%= className %></small>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/student/dashboard">My Courseware</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark border-bottom fw-bold" href="#cbt-section">📝 Jump To CBT Exams</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/student/results">Performance Records</a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a class="nav-link text-danger border border-danger-subtle text-center" href="/logout">Secure Signout</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                <div>
+                    <h2 class="fw-bold text-uppercase tracking-tight">Academic Resource Console</h2>
+                    <p class="text-muted mb-0">Welcome back, <span class="fw-semibold text-dark"><%= user.fullName %></span></p>
+                </div>
+                <div class="text-end">
+                    <div class="text-muted font-monospace small">ID: <%= user.username %></div>
+                    <span class="badge bg-dark rounded-1 font-monospace mt-1"><%= className %></span>
+                </div>
+            </div>
+
+            <!-- Lessons Section -->
+            <h5 class="fw-bold text-uppercase mb-4 tracking-wide">Available Lectures & Course Modules</h5>
+
+            <div class="row g-4">
+                <% if (lessons.length === 0) { %>
+                    <div class="col-12">
+                        <div class="card card-custom p-5 text-center shadow-sm">
+                            <p class="text-muted font-monospace mb-0">No academic blueprints have been published to your class stream yet. Check back shortly for updates from your lecturer.</p>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <% lessons.forEach(function(lesson) { %>
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card card-custom h-100 p-4 shadow-sm d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <span class="badge bg-dark badge-track font-monospace"><%= lesson.subject_name %></span>
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-3"><%= lesson.title %></h5>
+                                </div>
+                                
+                                <div class="mt-4 pt-3 border-top">
+                                    <div class="d-grid gap-2">
+                                        <% if (lesson.document_url) { %>
+                                            <a href="<%= lesson.document_url %>" target="_blank" class="btn btn-dark py-2 text-uppercase fw-bold tracking-wide rounded-1 small" style="font-size: 0.8rem;">
+                                                📖 Download Lecture Notes
+                                            </a>
+                                        <% } %>
+                                        
+                                        <% if (lesson.video_url) { %>
+                                            <a href="<%= lesson.video_url %>" target="_blank" class="btn btn-outline-dark py-2 text-uppercase fw-bold tracking-wide rounded-1 small" style="font-size: 0.8rem;">
+                                                ▶ Watch Video Tutorial
+                                            </a>
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } %>
+            </div>
+
+            <!-- CBT Exams Section -->
+            <div id="cbt-section" class="mt-5 pt-4 border-top">
+                <h5 class="fw-bold text-uppercase mb-4 tracking-wide text-danger">Active Computer-Based Test Modules</h5>
+                <div class="row g-4">
+                    <% if (exams.length === 0) { %>
+                        <div class="col-12">
+                            <div class="card card-custom p-4 text-center">
+                                <p class="text-muted font-monospace mb-0 small">No active test frameworks are scheduled for your tier profile metrics at this time.</p>
+                            </div>
+                            <% if (exam.attempt_count >= (exam.allowed_attempts || 1)) { %>
+    <button class="btn btn-secondary w-100" disabled>🔒 Max Attempts Reached</button>
+<% } else { %>
+    <a href="/student/exams/<%= exam.id %>" class="btn btn-danger w-100">
+        📝 Enter Exam (<%= exam.attempt_count %>/<%= exam.allowed_attempts %>)
+    </a>
+<% } %>
+                        </div>
+                    <% } else { %>
+                        <% exams.forEach(function(exam) { %>
+                            <div class="col-md-6">
+                                <div class="card card-custom p-4 shadow-sm border-start border-3 <%= exam.past_score !== null ? 'border-success' : 'border-danger' %>">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge bg-dark font-monospace text-uppercase small"><%= exam.subject_name %></span>
+                                        <span class="font-monospace text-muted small"><%= exam.duration_minutes %> MINS</span>
+                                    </div>
+                                    <h5 class="fw-bold text-dark mb-3"><%= exam.title %></h5>
+                                    <p class="text-muted small mb-3">
+                                        Contains <strong><%= exam.question_count %> questions</strong> to evaluate track performance.
+                                    </p>
+                                    
+                                    <!-- Attempt Information -->
+                                    <div class="mb-3 p-2 bg-light rounded-1">
+                                        <div class="d-flex justify-content-between small">
+                                            <span class="text-muted">Attempts:</span>
+                                            <span class="fw-bold font-monospace">
+                                                <%= exam.attempts_used || 0 %> / <%= exam.allowed_attempts || 1 %>
+                                            </span>
+                                        </div>
+                                        <% if (exam.best_score !== null && exam.best_score !== undefined) { %>
+                                            <div class="d-flex justify-content-between small mt-1">
+                                                <span class="text-muted">Best Score:</span>
+                                                <span class="fw-bold font-monospace text-success">
+                                                    <%= parseFloat(exam.best_score).toFixed(2) %>%
+                                                </span>
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                    
+                                    <!-- Action Button -->
+                                    <% const attemptsUsed = exam.attempts_used || 0; 
+                                       const allowedAttempts = exam.allowed_attempts || 1; %>
+                                    
+                                    <% if (attemptsUsed >= allowedAttempts) { %>
+                                        <div class="alert alert-warning py-2 px-3 font-monospace m-0 rounded-1 small fw-bold">
+                                            ⚠ Maximum Attempts Reached (<%= allowedAttempts %>)
+                                        </div>
+                                    <% } else if (exam.question_count == 0) { %>
+                                        <button class="btn btn-outline-secondary w-100 font-monospace rounded-1 small py-2" disabled>
+                                            Awaiting Questions...
+                                        </button>
+                                    <% } else { %>
+                                        <a href="/student/exams/<%= exam.id %>" class="btn btn-danger w-100 text-uppercase fw-bold tracking-wide rounded-1 py-2 small" style="font-size: 0.8rem;">
+                                            📝 Enter Examination Environment 
+                                            <span class="font-monospace">(<%= allowedAttempts - attemptsUsed %> remaining)</span>
+                                        </a>
+                                    <% } %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } %>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exams Results Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #fcfcfc; color: #111111; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .sidebar { background-color: #ffffff; min-height: 100vh; border-right: 1px solid #eaeaea; }
+        .sidebar .nav-link { color: #444444; font-weight: 500; border-radius: 2px; margin-bottom: 4px; padding: 10px 15px; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.05em; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #000000; color: #ffffff; }
+        .card-custom { border: 1px solid #eaeaea; border-radius: 2px; background-color: #ffffff; }
+        .border-black-thick { border-top: 3px solid #000000; }
+        .table-custom th { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #666666; background-color: #fafafa; }
+        .table-custom td { vertical-align: middle; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+            <div class="position-sticky">
+                <div class="px-2 py-3 mb-3 border-bottom">
+                    <h6 class="fw-bold text-uppercase m-0 tracking-wide">HLT TERMINAL</h6>
+                    <small class="text-muted font-monospace" style="font-size: 0.7rem;">SYS-ADMIN v1.0</small>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link" href="/admin/dashboard">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/students">Students</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/curriculum">Subjects & Lessons</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/exams">Exams Module</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/results">Results Portal</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/admin/diagnostic/exam-health">Diagnostics</a></li>
+                    <li class="nav-item mt-4"><a class="nav-link text-danger border border-danger-subtle text-center" href="/logout">Secure Signout</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb mb-1 small text-uppercase fw-semibold tracking-wider">
+                            <li class="breadcrumb-item"><a href="/admin/dashboard" class="text-dark text-decoration-none">Sys-Admin</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Performance Index</li>
+                        </ol>
+                    </nav>
+                    <h2 class="fw-bold text-uppercase tracking-tight">Exam Performance Matrix</h2>
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-outline-dark btn-sm font-monospace rounded-1 fw-bold text-uppercase tracking-wide">
+                        🖨 Export Global Dataset
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card card-custom p-3 shadow-sm border-black-thick">
+                        <small class="text-uppercase fw-bold text-muted font-monospace" style="font-size: 0.7rem;">Total Vector Submissions</small>
+                        <h3 class="fw-bold m-0 mt-1"><%= stats.totalSubmissions %></h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom p-3 shadow-sm border-black-thick">
+                        <small class="text-uppercase fw-bold text-muted font-monospace" style="font-size: 0.7rem;">Mean Scoring Accuracy</small>
+                        <h3 class="fw-bold m-0 mt-1 text-success"><%= stats.averageScore %>%</h3>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card card-custom p-3 shadow-sm border-black-thick">
+                        <small class="text-uppercase fw-bold text-muted font-monospace" style="font-size: 0.7rem;">Passing Threshold Cleared</small>
+                        <h3 class="fw-bold m-0 mt-1"><%= stats.passCount %> <span class="text-muted fs-6 fw-normal">/ <%= stats.totalSubmissions %></span></h3>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-custom shadow-sm mb-4 rounded-1">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold text-uppercase m-0 small tracking-wide">Compiled Submission Log</h5>
+                    <div class="d-flex gap-2">
+                        <input type="text" class="form-control form-control-sm rounded-1 font-monospace" style="width: 200px;" placeholder="Search UUID/Name...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover m-0">
+                        <thead>
+                            <tr class="border-bottom">
+                                <th class="ps-4 py-3">Sequence Node</th>
+                                <th class="py-3">Student Identity</th>
+                                <th class="py-3">Target Assessment Node</th>
+                                <th class="py-3">Raw Metric</th>
+                                <th class="py-3">Scale Accuracy</th>
+                                <th class="py-3">Status</th>
+                                <th class="text-end pe-4 py-3">Operations</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (results.length === 0) { %>
+                                <tr>
+                                    <td colspan="7" class="text-center p-5 text-muted font-monospace small">
+                                        No active compilation matrices found in the performance log database.
+                                    </td>
+                                </tr>
+                            <% } else { %>
+                                <% results.forEach(function(r, index) { %>
+                                    <tr class="align-middle">
+                                        <td class="ps-4 font-monospace text-muted">#<%= index + 1 %></td>
+                                        <td>
+                                            <div class="fw-bold text-dark"><%= r.student_name %></div>
+                                            <small class="text-muted font-monospace" style="font-size: 0.75rem;"><%= r.student_email %></small>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-uppercase small"><%= r.exam_title %></div>
+                                        </td>
+                                        <td class="font-monospace fw-semibold"><%= r.score_obtained %> / <%= r.total_questions %></td>
+                                        <td class="font-monospace fw-bold <%= r.percentage >= 50 ? 'text-success' : 'text-danger' %>">
+                                            <%= r.percentage %>%
+                                        </td>
+                                        <td>
+                                            <% if (r.percentage >= 50) { %>
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-1 font-monospace text-uppercase" style="font-size: 0.65rem;">Cleared</span>
+                                            <% } else { %>
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-1 font-monospace text-uppercase" style="font-size: 0.65rem;">Failed</span>
+                                            <% } %>
+                                        </td>
+                                        <td class="text-end pe-4">
+                                            <button class="btn btn-xs btn-outline-dark rounded-1 font-monospace text-uppercase tracking-tight" style="font-size: 0.75rem; padding: 3px 8px;" data-bs-toggle="modal" data-bs-target="#inspectModal<%= r.id %>">
+                                                🔬 Inspect
+                                            </button>
+                                        </td>
+                                    </tr>
+
+                                    <div class="modal fade" id="inspectModal<%= r.id %>" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog modal-dialog-centered">
+                                            <div class="modal-content rounded-1 border-0 shadow-lg">
+                                                <div class="modal-header bg-dark text-white rounded-0">
+                                                    <h5 class="modal-title text-uppercase fw-bold small tracking-wide">Node Metric Analysis</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start font-monospace small">
+                                                    <p class="border-bottom pb-2"><strong>Record ID Vector:</strong> <span class="text-muted float-end"><%= r.id %></span></p>
+                                                    <p class="border-bottom pb-2"><strong>Target Node Name:</strong> <span class="text-dark fw-bold float-end"><%= r.student_name %></span></p>
+                                                    <p class="border-bottom pb-2"><strong>Exam Target Domain:</strong> <span class="float-end"><%= r.exam_title %></span></p>
+                                                    <p class="border-bottom pb-2"><strong>Execution Timestamp:</strong> <span class="float-end"><%= r.submission_date %></span></p>
+                                                    <div class="p-3 bg-light border text-center my-3 rounded-1">
+                                                        <span class="d-block text-muted text-uppercase mb-1" style="font-size: 0.7rem;">Evaluated Score Accuracy</span>
+                                                        <h1 class="fw-bold tracking-tighter m-0 <%= r.percentage >= 50 ? 'text-success' : 'text-danger' %>"><%= r.percentage %>%</h1>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer bg-light rounded-0">
+                                                    <button type="button" class="btn btn-secondary btn-sm rounded-1 text-uppercase fw-bold" data-bs-dismiss="modal">Close View Matrix</button>
+                                                    <form action="/admin/results/invalidate/<%= r.id %>" method="POST" onsubmit="return confirm('Completely purge this record entry? This action is irreversible.');" style="display: inline;">
+                                                        <button type="submit" class="btn btn-danger btn-sm rounded-1 text-uppercase fw-bold">Purge Log Entry</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }) %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

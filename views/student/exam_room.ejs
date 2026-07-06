@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Live Exam Environment</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f8f9fa; 
+            color: #111111; 
+            user-select: none; 
+        }
+        .exam-header { 
+            background-color: #000000; 
+            color: #ffffff; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            border-bottom: 3px solid #dc3545; 
+        }
+        .question-box { 
+            border: 1px solid #eaeaea; 
+            background-color: #ffffff; 
+            border-radius: 4px; 
+            transition: box-shadow 0.3s ease;
+        }
+        .question-box:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .timer-box { 
+            font-size: 1.5rem; 
+            font-family: 'Courier New', monospace; 
+            font-weight: bold; 
+            background-color: #222; 
+            color: #ffc107; 
+            padding: 5px 15px; 
+            border-radius: 4px; 
+        }
+        .timer-warning {
+            color: #dc3545 !important;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        .cursor-pointer { 
+            cursor: pointer; 
+        }
+        .option-label { 
+            transition: all 0.2s; 
+            border: 2px solid transparent;
+        }
+        .option-label:hover { 
+            background-color: #f0f0f0; 
+            border-color: #000; 
+        }
+        .option-label input[type="radio"]:checked ~ span { 
+            font-weight: bold; 
+            color: #000; 
+        }
+        .option-label:has(input[type="radio"]:checked) {
+            background-color: #e7f3ff;
+            border-color: #0066cc;
+        }
+        .question-nav {
+            position: sticky;
+            top: 100px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        .question-nav-btn {
+            width: 40px;
+            height: 40px;
+            margin: 3px;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .question-nav-btn.answered {
+            background-color: #198754;
+            color: white;
+            border-color: #198754;
+        }
+        .question-nav-btn.unanswered {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+        .progress-indicator {
+            height: 4px;
+            background-color: #e9ecef;
+            border-radius: 2px;
+            margin-bottom: 20px;
+        }
+        .progress-indicator .progress-bar {
+            background-color: #198754;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="exam-header py-3 mb-4 shadow-sm">
+    <div class="container d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="m-0 text-uppercase fw-bold tracking-wide text-danger">LIVE ASSESSMENT INTERFACE</h5>
+            <span class="small text-muted text-uppercase">
+                <%= exam.title %> — Class: <%= exam.class_name %>
+                <% if (typeof attemptNumber !== 'undefined' && typeof totalAttemptsAllowed !== 'undefined') { %>
+                    | Attempt <%= attemptNumber %> of <%= totalAttemptsAllowed %>
+                <% } %>
+            </span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="small text-uppercase tracking-wider text-white-50">Time Remaining:</span>
+            <div id="countdown-clock" class="timer-box">00:00</div>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5">
+    <!-- Progress Bar -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="progress-indicator">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <small class="text-muted">
+                    Questions Answered: <span id="answeredCount">0</span> / <%= questions.length %>
+                </small>
+                <small class="text-muted">
+                    Attempt <%= typeof attemptNumber !== 'undefined' ? attemptNumber : '1' %> of 
+                    <%= typeof totalAttemptsAllowed !== 'undefined' ? totalAttemptsAllowed : '1' %>
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Question Navigation Sidebar -->
+        <div class="col-lg-3 order-lg-2 mb-4">
+            <div class="question-nav">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-dark text-white">
+                        <h6 class="mb-0">Question Navigator</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap justify-content-center">
+                            <% questions.forEach(function(q, index) { %>
+                                <a href="#question-<%= q.id %>" 
+                                   class="btn btn-outline-secondary question-nav-btn unanswered" 
+                                   id="nav-btn-<%= q.id %>"
+                                   data-question-id="<%= q.id %>">
+                                    <%= index + 1 %>
+                                </a>
+                            <% }) %>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between small mt-2">
+                            <span><span class="badge bg-success">&nbsp;</span> Answered</span>
+                            <span><span class="badge bg-danger">&nbsp;</span> Unanswered</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Area -->
+        <div class="col-lg-9 order-lg-1">
+            <form id="cbt-submission-form" action="/student/exams/<%= exam.id %>/submit" method="POST" onsubmit="return validateSubmission()">
+                
+                <% questions.forEach(function(q, index) { %>
+                    <div class="card question-box p-4 mb-4 shadow-sm" id="question-<%= q.id %>">
+                        <div class="fw-bold font-monospace text-muted small mb-2 border-bottom pb-2 d-flex justify-content-between">
+                            <span>QUESTION ITEM #<%= index + 1 %></span>
+                            <span class="badge bg-secondary">ID: <%= q.id %></span>
+                        </div>
+                        <p class="fw-semibold text-dark mb-4" style="font-size: 1.1rem;">
+                            <%= q.question_text %>
+                        </p>
+                        
+                        <div class="d-flex flex-column gap-2">
+                            <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
+                                <input type="radio" 
+                                       name="answers[<%= q.id %>]" 
+                                       value="A" 
+                                       class="form-check-input me-3"
+                                       data-question-id="<%= q.id %>"
+                                       onchange="updateNavigation(<%= q.id %>, true)">
+                                <span><strong>A.</strong> <%= q.option_a %></span>
+                            </label>
+                            <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
+                                <input type="radio" 
+                                       name="answers[<%= q.id %>]" 
+                                       value="B" 
+                                       class="form-check-input me-3"
+                                       data-question-id="<%= q.id %>"
+                                       onchange="updateNavigation(<%= q.id %>, true)">
+                                <span><strong>B.</strong> <%= q.option_b %></span>
+                            </label>
+                            <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
+                                <input type="radio" 
+                                       name="answers[<%= q.id %>]" 
+                                       value="C" 
+                                       class="form-check-input me-3"
+                                       data-question-id="<%= q.id %>"
+                                       onchange="updateNavigation(<%= q.id %>, true)">
+                                <span><strong>C.</strong> <%= q.option_c %></span>
+                            </label>
+                            <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
+                                <input type="radio" 
+                                       name="answers[<%= q.id %>]" 
+                                       value="D" 
+                                       class="form-check-input me-3"
+                                       data-question-id="<%= q.id %>"
+                                       onchange="updateNavigation(<%= q.id %>, true)">
+                                <span><strong>D.</strong> <%= q.option_d %></span>
+                            </label>
+                        </div>
+                    </div>
+                <% }) %>
+
+                <!-- Hidden field for exam metadata -->
+                <input type="hidden" name="examId" value="<%= exam.id %>">
+                <input type="hidden" name="studentId" value="<%= user.userId %>">
+                <input type="hidden" name="submissionTime" id="submissionTime" value="">
+
+                <div class="text-end mt-4">
+                    <div class="alert alert-warning d-none" id="unansweredWarning">
+                        <strong>⚠ Warning:</strong> You have <span id="unansweredCount">0</span> unanswered questions.
+                    </div>
+                    <button type="submit" 
+                            class="btn btn-dark btn-lg px-5 text-uppercase fw-bold tracking-wide rounded shadow" 
+                            id="submitBtn">
+                        <span id="submitBtnText">Finalize Assessment Submission</span>
+                        <span id="submitBtnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================
+    // TIMER MANAGEMENT
+    // ==========================================
+    const examDurationMinutes = parseInt("<%= exam.duration_minutes %>");
+    const examId = "<%= exam.id %>";
+    const totalQuestions = <%= questions.length %>;
+    const storageKey = "exam_timer_end_id_" + examId;
+    
+    let targetTime = localStorage.getItem(storageKey);
+
+    if (!targetTime) {
+        targetTime = Date.now() + (examDurationMinutes * 60 * 1000);
+        localStorage.setItem(storageKey, targetTime);
+    } else {
+        targetTime = parseInt(targetTime);
+        
+        if (Date.now() >= targetTime) {
+            localStorage.removeItem(storageKey);
+            alert("⏰ Time has expired! Your exam will be submitted automatically.");
+            document.getElementById("submissionTime").value = new Date().toISOString();
+            document.getElementById("cbt-submission-form").submit();
+        }
+    }
+
+    const clockNode = document.getElementById("countdown-clock");
+    const subFormNode = document.getElementById("cbt-submission-form");
+
+    function updateTimer() {
+        const remainingTime = targetTime - Date.now();
+
+        if (remainingTime <= 0) {
+            clearInterval(timerInterval);
+            localStorage.removeItem(storageKey);
+            clockNode.innerText = "00:00";
+            clockNode.classList.add("timer-warning");
+            
+            setTimeout(() => {
+                alert("⏰ Time allowance has expired! Your current selections will be committed automatically.");
+                document.getElementById("submissionTime").value = new Date().toISOString();
+                subFormNode.submit();
+            }, 500);
+        } else {
+            const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+            
+            const formatM = String(minutes).padStart(2, '0');
+            const formatS = String(seconds).padStart(2, '0');
+            clockNode.innerText = `${formatM}:${formatS}`;
+            
+            // Visual warning when less than 5 minutes remain
+            if (remainingTime <= 300000) {
+                clockNode.classList.add("timer-warning");
+            }
+        }
+    }
+
+    const timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // ==========================================
+    // QUESTION NAVIGATION & PROGRESS TRACKING
+    // ==========================================
+    const answeredQuestions = new Set();
+
+    function updateNavigation(questionId, isAnswered) {
+        const navBtn = document.getElementById('nav-btn-' + questionId);
+        
+        if (isAnswered) {
+            answeredQuestions.add(String(questionId));
+            if (navBtn) {
+                navBtn.classList.remove('unanswered');
+                navBtn.classList.add('answered');
+            }
+        }
+        
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const answeredCount = answeredQuestions.size;
+        const progressPercentage = (answeredCount / totalQuestions) * 100;
+        
+        document.getElementById('answeredCount').textContent = answeredCount;
+        document.getElementById('progressBar').style.width = progressPercentage + '%';
+        
+        const unansweredCount = totalQuestions - answeredCount;
+        const warningDiv = document.getElementById('unansweredWarning');
+        const unansweredSpan = document.getElementById('unansweredCount');
+        
+        if (unansweredCount > 0 && answeredCount > 0) {
+            warningDiv.classList.remove('d-none');
+            unansweredSpan.textContent = unansweredCount;
+        } else {
+            warningDiv.classList.add('d-none');
+        }
+    }
+
+    // Initialize navigation on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+            const questionId = radio.getAttribute('data-question-id');
+            if (questionId) {
+                answeredQuestions.add(String(questionId));
+                updateNavigation(questionId, true);
+            }
+        });
+        
+        updateProgress();
+    });
+
+    // ==========================================
+    // FORM SUBMISSION HANDLING
+    // ==========================================
+    function validateSubmission() {
+        const unansweredCount = totalQuestions - answeredQuestions.size;
+        
+        document.getElementById("submissionTime").value = new Date().toISOString();
+        
+        if (unansweredCount > 0) {
+            return confirm(`⚠ You have ${unansweredCount} unanswered question(s) out of ${totalQuestions}.\n\nAre you sure you want to submit? This action cannot be undone.`);
+        }
+        
+        return confirm('✓ All questions are answered.\n\nAre you sure you want to finalize and submit your assessment? This action cannot be undone.');
+    }
+
+    // Disable submit button after click to prevent double submission
+    subFormNode.addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('submitBtnText');
+        const btnSpinner = document.getElementById('submitBtnSpinner');
+        
+        btnText.classList.add('d-none');
+        btnSpinner.classList.remove('d-none');
+        submitBtn.disabled = true;
+        
+        localStorage.removeItem(storageKey);
+        clearInterval(timerInterval);
+    });
+
+    // ==========================================
+    // ANTI-CHEATING MEASURES
+    // ==========================================
+    
+    window.addEventListener('beforeunload', (e) => {
+        const answeredCount = answeredQuestions.size;
+        if (answeredCount > 0) {
+            e.preventDefault();
+            e.returnValue = `You have answered ${answeredCount} out of ${totalQuestions} questions. Are you sure you want to leave?`;
+            return e.returnValue;
+        }
+    });
+
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || 
+            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J')) ||
+            (e.ctrlKey && e.key === 'U')) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Auto-save answers to localStorage as backup
+    function autoSaveAnswers() {
+        const answers = {};
+        document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+            const questionId = radio.getAttribute('data-question-id');
+            if (questionId) {
+                answers[questionId] = radio.value;
+            }
+        });
+        localStorage.setItem('exam_answers_backup_' + examId, JSON.stringify(answers));
+    }
+
+    // Auto-save every 30 seconds
+    setInterval(autoSaveAnswers, 30000);
+
+    // Restore answers from backup
+    function restoreAnswersFromBackup() {
+        const backupData = localStorage.getItem('exam_answers_backup_' + examId);
+        if (backupData) {
+            try {
+                const answers = JSON.parse(backupData);
+                Object.entries(answers).forEach(([questionId, value]) => {
+                    const radio = document.querySelector(`input[name="answers[${questionId}]"][value="${value}"]`);
+                    if (radio) {
+                        radio.checked = true;
+                        updateNavigation(questionId, true);
+                    }
+                });
+            } catch (e) {
+                console.error('Failed to restore answers from backup:', e);
+            }
+        }
+    }
+
+    restoreAnswersFromBackup();
+
+    subFormNode.addEventListener('submit', function() {
+        localStorage.removeItem('exam_answers_backup_' + examId);
+    });
+
+    console.log('✅ CBT Exam Environment Initialized Successfully');
+    console.log(`📝 Total Questions: ${totalQuestions}`);
+    console.log(`⏱ Time Limit: ${examDurationMinutes} minutes`);
+    console.log(`🆔 Exam ID: ${examId}`);
+</script>
+</body>
+</html>
