@@ -53,7 +53,7 @@
             <!-- Success/Error Messages -->
             <% if (typeof success !== 'undefined' && success) { %>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle"></i> <%- success %>
+                    <i class="bi bi-check-circle"></i> <%= success %>
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             <% } %>
@@ -115,6 +115,7 @@
                                                       method="POST" 
                                                       style="display:inline;"
                                                       onsubmit="return confirm('<%= student.account_status === "frozen" ? "Unfreeze" : "Freeze" %> account for <%= student.full_name %>?');">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <button type="submit" 
                                                             class="btn btn-sm btn-outline-warning action-btn"
                                                             title="<%= student.account_status === 'frozen' ? 'Unfreeze Account' : 'Freeze Account' %>">
@@ -131,6 +132,7 @@
                                                       method="POST" 
                                                       style="display:inline;"
                                                       onsubmit="return confirm('Are you sure you want to delete the account for <%= student.full_name %>? This action can be reversed by an admin.');">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <button type="submit" 
                                                             class="btn btn-sm btn-outline-danger action-btn"
                                                             title="Soft Delete">
@@ -143,6 +145,7 @@
                                                       method="POST" 
                                                       style="display:inline;"
                                                       onsubmit="return confirm('⚠ WARNING: This will PERMANENTLY delete <%= student.full_name %> and all their data. This cannot be undone! Are you sure?');">
+                                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                     <button type="submit" 
                                                             class="btn btn-sm btn-outline-danger action-btn"
                                                             title="Permanent Delete">
@@ -173,6 +176,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="/admin/students/create" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label text-uppercase small fw-bold text-muted">

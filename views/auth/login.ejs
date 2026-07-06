@@ -26,6 +26,7 @@
             <% } %>
 
             <form action="/login" method="POST">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <div class="mb-3">
                     <label for="username" class="form-label text-uppercase small fw-bold text-muted">User ID</label>
                     <input type="text" class="form-control rounded-1 py-2 font-monospace" id="username" name="username" placeholder="e.g., HLT26001" required>
