@@ -191,6 +191,7 @@
                                                 </td>
                                                 <td>
                                                     <form action="/admin/diagnostic/fix-correct-option" method="POST" class="fix-form">
+                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                         <input type="hidden" name="questionId" value="<%= q.id %>">
                                                         <input type="hidden" name="examId" value="<%= exam.id %>">
                                                         <select name="newCorrectOption" class="form-select form-select-sm rounded-1">

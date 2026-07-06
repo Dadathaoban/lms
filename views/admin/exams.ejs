@@ -49,6 +49,7 @@
                     <div class="card card-custom p-4 shadow-sm border-black-thick">
                         <h5 class="fw-bold text-uppercase mb-3">Deploy Assessment Profile</h5>
                         <form action="/admin/exams/create" method="POST">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Assessment Title</label>
                                 <input type="text" name="title" class="form-control rounded-1" placeholder="e.g., First Semester Examination" required>
@@ -111,6 +112,7 @@
                                                 <td class="font-monospace text-muted fw-bold"><%= exam.question_count %> Items</td>
                                                 <td>
                                                     <form action="/admin/exams/<%= exam.id %>/alter-attempts" method="POST" class="d-flex align-items-center gap-1">
+                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
     <input type="number" 
            name="allowedAttempts" 
            value="<%= exam.allowed_attempts !== undefined && exam.allowed_attempts !== null ? exam.allowed_attempts : 1 %>" 

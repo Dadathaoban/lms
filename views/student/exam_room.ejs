@@ -171,6 +171,7 @@
         <!-- Questions Area -->
         <div class="col-lg-9 order-lg-1">
             <form id="cbt-submission-form" action="/student/exams/<%= exam.id %>/submit" method="POST" onsubmit="return validateSubmission()">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 
                 <% questions.forEach(function(q, index) { %>
                     <div class="card question-box p-4 mb-4 shadow-sm" id="question-<%= q.id %>">
@@ -185,7 +186,7 @@
                         <div class="d-flex flex-column gap-2">
                             <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
                                 <input type="radio" 
-                                       name="answers[<%= q.id %>]" 
+                                       name="answer_<%= q.id %>" 
                                        value="A" 
                                        class="form-check-input me-3"
                                        data-question-id="<%= q.id %>"
@@ -194,7 +195,7 @@
                             </label>
                             <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
                                 <input type="radio" 
-                                       name="answers[<%= q.id %>]" 
+                                       name="answer_<%= q.id %>" 
                                        value="B" 
                                        class="form-check-input me-3"
                                        data-question-id="<%= q.id %>"
@@ -203,7 +204,7 @@
                             </label>
                             <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
                                 <input type="radio" 
-                                       name="answers[<%= q.id %>]" 
+                                       name="answer_<%= q.id %>" 
                                        value="C" 
                                        class="form-check-input me-3"
                                        data-question-id="<%= q.id %>"
@@ -212,7 +213,7 @@
                             </label>
                             <label class="option-label d-flex align-items-center p-3 border rounded bg-light cursor-pointer">
                                 <input type="radio" 
-                                       name="answers[<%= q.id %>]" 
+                                       name="answer_<%= q.id %>" 
                                        value="D" 
                                        class="form-check-input me-3"
                                        data-question-id="<%= q.id %>"
@@ -433,7 +434,7 @@
             try {
                 const answers = JSON.parse(backupData);
                 Object.entries(answers).forEach(([questionId, value]) => {
-                    const radio = document.querySelector(`input[name="answers[${questionId}]"][value="${value}"]`);
+                    const radio = document.querySelector(`input[name="answer_${questionId}"][value="${value}"]`);
                     if (radio) {
                         radio.checked = true;
                         updateNavigation(questionId, true);

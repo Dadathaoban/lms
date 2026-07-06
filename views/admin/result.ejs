@@ -31,7 +31,7 @@
                     <li class="nav-item"><a class="nav-link" href="/admin/students">Students</a></li>
                     <li class="nav-item"><a class="nav-link" href="/admin/curriculum">Subjects & Lessons</a></li>
                     <li class="nav-item"><a class="nav-link" href="/admin/exams">Exams Module</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="/admin/results">Results Portal</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/admin/result">Results Portal</a></li>
                     <li class="nav-item"><a class="nav-link" href="/admin/diagnostic/exam-health">Diagnostics</a></li>
                     <li class="nav-item mt-4"><a class="nav-link text-danger border border-danger-subtle text-center" href="/logout">Secure Signout</a></li>
                 </ul>
@@ -154,6 +154,7 @@
                                                 <div class="modal-footer bg-light rounded-0">
                                                     <button type="button" class="btn btn-secondary btn-sm rounded-1 text-uppercase fw-bold" data-bs-dismiss="modal">Close View Matrix</button>
                                                     <form action="/admin/results/invalidate/<%= r.id %>" method="POST" onsubmit="return confirm('Completely purge this record entry? This action is irreversible.');" style="display: inline;">
+                                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                         <button type="submit" class="btn btn-danger btn-sm rounded-1 text-uppercase fw-bold">Purge Log Entry</button>
                                                     </form>
                                                 </div>

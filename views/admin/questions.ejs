@@ -69,6 +69,7 @@
                     <div class="card card-custom p-4 shadow-sm border-black-thick position-sticky" style="top: 20px;">
                         <h5 class="fw-bold text-uppercase mb-3">➕ Add Question Configuration Node</h5>
                         <form action="/admin/exams/<%= exam.id %>/questions/add" method="POST" id="addQuestionForm">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                             <div class="mb-3">
                                 <label class="form-label text-uppercase small fw-bold text-muted">Question Prompt / Statement</label>
                                 <textarea name="questionText" class="form-control rounded-1" rows="3" placeholder="Type the exam question text..." required></textarea>
@@ -163,6 +164,7 @@
                                                   method="POST" 
                                                   onsubmit="return confirm('⚠ Permanently delete Question #<%= index + 1 %>?');" 
                                                   style="display:inline;">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                 <button type="submit" class="btn btn-xs btn-outline-danger rounded-1 font-monospace" 
                                                         style="font-size:0.75rem; padding: 2px 6px;">
                                                     🗑 Purge
@@ -206,6 +208,7 @@
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
                                             <form action="/admin/exams/<%= exam.id %>/questions/edit/<%= q.id %>" method="POST">
+                                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                                 <div class="modal-body text-start">
                                                     <div class="mb-3">
                                                         <label class="form-label text-uppercase small fw-bold text-muted">Question Text</label>
